@@ -1,0 +1,12 @@
+{
+	"name": "Challenge Server",
+	"description": "A script for dedicated servers that waits for players, then waits for the game to end, then restarts.",
+	"author": "Yuudaari",
+	"version": "1.0.0",
+	"compatibleMinorVersions": [7],
+	"file": "out/ChallengeServer",
+	"multiplayerClientside": true,
+	"languages": [
+		"lang/english"
+	]
+}
