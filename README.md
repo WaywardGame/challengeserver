@@ -13,11 +13,13 @@ A server-side mod which automatically runs challenge games.
 
 ## Editing the mod
 
-To clone:
+Cloning/Setup:
 ```
 git clone https://github.com/WaywardGame/challengeserver.git
 cd challengeserver
-git submodule update --init
+On Windows: path/to/wayward/install/wayward.cmd +mod update .
+On macOS: path/to/wayward/install/Wayward.app/Contents/MacOS/Electron +mod update .
+On Linux: path/to/wayward/install/wayward +mod update .
 ```
 
 To build:

@@ -1,19 +1,17 @@
-import { PlayerState } from "Enums";
-import { Difficulty } from "game/Difficulty";
+import { PlayerState } from "entity/player/IPlayer";
+import Player from "entity/player/Player";
+import { GameMode } from "game/options/IGameOptions";
 import { Dictionary } from "language/Dictionaries";
 import Translation from "language/Translation";
 import { HookMethod } from "mod/IHookHost";
 import Mod from "mod/Mod";
 import Register from "mod/ModRegistry";
-import { CheckButton, CheckButtonEvent } from "newui/component/CheckButton";
+import { CheckButton } from "newui/component/CheckButton";
 import Component from "newui/component/Component";
-import { RangeInputEvent } from "newui/component/RangeInput";
 import { RangeRow } from "newui/component/RangeRow";
-import { UiApi } from "newui/INewUi";
+import newui from "newui/NewUi";
 import Messages from "newui/screen/screens/game/static/Messages";
-import IPlayer from "player/IPlayer";
 import { sleep } from "utilities/Async";
-import { Bound } from "utilities/Objects";
 
 enum GameState {
 	OutsideGame,
@@ -86,7 +84,7 @@ export default class ChallengeServer extends Mod {
 	private winnerName: string | undefined;
 	private elapsed: number;
 
-	public initializeGlobalData(data?: IChallengeServerData) {
+	@Override public initializeGlobalData(data?: IChallengeServerData) {
 		return data || {
 			playersToWaitFor: 2,
 			countdownTime: 5,
@@ -96,49 +94,49 @@ export default class ChallengeServer extends Mod {
 	}
 
 	@Register.optionsSection
-	public initializeOptionsSection(api: UiApi, section: Component) {
-		new RangeRow(api)
+	public initializeOptionsSection(section: Component) {
+		new RangeRow()
 			.setLabel(label => label.setText(translation(ChallengeServerTranslation.OptionCountdownTime)))
 			.editRange(range => range
 				.setMin(0.5)
 				.setMax(10)
 				.setStep(0.5)
 				.setRefreshMethod(() => this.data.countdownTime))
-			.on(RangeInputEvent.Finish, (_, value: number) => this.data.countdownTime = value)
+			.event.subscribe("finish", (_, value) => this.data.countdownTime = value)
 			.setDisplayValue(value => translateTime(minutes(value), "analog"))
 			.appendTo(section);
 
-		new RangeRow(api)
+		new RangeRow()
 			.setLabel(label => label.setText(translation(ChallengeServerTranslation.OptionEndingCountdownTime)))
 			.editRange(range => range
 				.setMin(0.5)
 				.setMax(5)
 				.setStep(0.5)
 				.setRefreshMethod(() => this.data.endingCountdownTime))
-			.on(RangeInputEvent.Finish, (_, value: number) => this.data.endingCountdownTime = value)
+			.event.subscribe("finish", (_, value) => this.data.endingCountdownTime = value)
 			.setDisplayValue(value => translateTime(minutes(value), "analog"))
 			.appendTo(section);
 
-		new RangeRow(api)
+		new RangeRow()
 			.setLabel(label => label.setText(translation(ChallengeServerTranslation.OptionPlayersToWaitFor)))
 			.editRange(range => range
 				.setMin(2)
 				.setMax(32)
 				.setRefreshMethod(() => this.data.playersToWaitFor))
-			.on(RangeInputEvent.Finish, (_, value: number) => this.data.playersToWaitFor = value)
+			.event.subscribe("finish", (_, value) => this.data.playersToWaitFor = value)
 			.setDisplayValue(true)
 			.appendTo(section);
 
-		new CheckButton(api)
+		new CheckButton()
 			.setText(translation(ChallengeServerTranslation.OptionLastSurvivingPlayerWins))
 			.setRefreshMethod(() => this.data.lastSurvivingPlayerWinsAutomatically)
-			.on(CheckButtonEvent.Change, (_, checked: boolean) => { this.data.lastSurvivingPlayerWinsAutomatically = checked; })
+			.event.subscribe("toggle", (_, checked) => { this.data.lastSurvivingPlayerWinsAutomatically = checked; })
 			.appendTo(section);
 	}
 
-	@HookMethod
+	@Override @HookMethod
 	public onGameStart(isLoadingSave: boolean, playedCount: number) {
-		if (game.getDifficulty() !== Difficulty.Challenge) return;
+		if (game.getGameMode() !== GameMode.Challenge) return;
 
 		game.setPaused(true);
 		this.contenders = new Set();
@@ -146,9 +144,9 @@ export default class ChallengeServer extends Mod {
 		sleep(seconds(1)).then(this.waitForPlayers);
 	}
 
-	@HookMethod
-	public onPlayerJoin(player: IPlayer) {
-		if (game.getDifficulty() !== Difficulty.Challenge) return;
+	@Override @HookMethod
+	public onPlayerJoin(player: Player) {
+		if (game.getGameMode() !== GameMode.Challenge) return;
 
 		if (this.gameState === GameState.WaitingForPlayers || this.gameState === GameState.Countdown) {
 			this.contenders.add(player.identifier);
@@ -163,9 +161,9 @@ export default class ChallengeServer extends Mod {
 		}
 	}
 
-	@HookMethod
-	public onPlayerLeave(player: IPlayer) {
-		if (game.getDifficulty() !== Difficulty.Challenge) return;
+	@Override @HookMethod
+	public onPlayerLeave(player: Player) {
+		if (game.getGameMode() !== GameMode.Challenge) return;
 
 		if (this.gameState === GameState.WaitingForPlayers) {
 			this.contenders.delete(player.identifier);
@@ -184,9 +182,9 @@ export default class ChallengeServer extends Mod {
 		}
 	}
 
-	@HookMethod
-	public onPlayerDeath(player: IPlayer): boolean | undefined {
-		if (game.getDifficulty() !== Difficulty.Challenge) return;
+	@Override @HookMethod
+	public onPlayerDeath(player: Player): boolean | undefined {
+		if (game.getGameMode() !== GameMode.Challenge) return;
 
 		const remainingPlayers = players.filter(p => p !== player && p.state === PlayerState.None);
 		if (remainingPlayers.length > 1) {
@@ -206,15 +204,15 @@ export default class ChallengeServer extends Mod {
 		return;
 	}
 
-	@HookMethod
-	public onSailToCivilization(player: IPlayer) {
-		if (game.getDifficulty() !== Difficulty.Challenge) return;
+	@Override @HookMethod
+	public onSailToCivilization(player: Player) {
+		if (game.getGameMode() !== GameMode.Challenge) return;
 
 		this.winnerName = player.getName().getString();
 		this.startEndingCountdown();
 	}
 
-	public onUnload() {
+	@Override public onUnload() {
 		this.gameState = GameState.OutsideGame;
 	}
 
@@ -239,6 +237,7 @@ export default class ChallengeServer extends Mod {
 			await sleep(seconds(1));
 
 			if (this.gameState !== GameState.Countdown) return;
+			// tslint:disable-next-line no-boolean-literal-compare i think this can be undefined
 			if (game.paused === false) {
 				this.startGame();
 				return;

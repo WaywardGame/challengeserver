@@ -4,9 +4,9 @@
 	"author": "Yuudaari",
 	"version": "1.0.0",
 	"unloadable": true,
-	"compatibleMinorVersions": [7],
+	"waywardVersion": "2.8.0-beta",
 	"file": "out/ChallengeServer",
-	"multiplayerClientside": true,
+	"multiplayer": "serverside",
 	"languages": [
 		"lang/english"
 	]

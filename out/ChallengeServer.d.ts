@@ -1,8 +1,7 @@
+import Player from "entity/player/Player";
 import { Dictionary } from "language/Dictionaries";
 import Mod from "mod/Mod";
 import Component from "newui/component/Component";
-import { UiApi } from "newui/INewUi";
-import IPlayer from "player/IPlayer";
 interface IChallengeServerData {
     playersToWaitFor: number;
     countdownTime: number;
@@ -18,12 +17,12 @@ export default class ChallengeServer extends Mod {
     private winnerName;
     private elapsed;
     initializeGlobalData(data?: IChallengeServerData): IChallengeServerData;
-    initializeOptionsSection(api: UiApi, section: Component): void;
+    initializeOptionsSection(section: Component): void;
     onGameStart(isLoadingSave: boolean, playedCount: number): void;
-    onPlayerJoin(player: IPlayer): void;
-    onPlayerLeave(player: IPlayer): void;
-    onPlayerDeath(player: IPlayer): boolean | undefined;
-    onSailToCivilization(player: IPlayer): void;
+    onPlayerJoin(player: Player): void;
+    onPlayerLeave(player: Player): void;
+    onPlayerDeath(player: Player): boolean | undefined;
+    onSailToCivilization(player: Player): void;
     onUnload(): void;
     private setDescription;
     private waitForPlayers;
