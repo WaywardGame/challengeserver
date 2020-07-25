@@ -21,7 +21,7 @@ export default class ChallengeServer extends Mod {
     onGameStart(isLoadingSave: boolean, playedCount: number): void;
     onPlayerJoin(player: Player): void;
     onPlayerLeave(player: Player): void;
-    onPlayerDeath(player: Player): boolean | undefined;
+    onPlayerDeath(player: Player): void;
     onSailToCivilization(player: Player): void;
     onUnload(): void;
     private setDescription;

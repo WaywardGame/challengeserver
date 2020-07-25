@@ -1,5 +1,7 @@
 import { PlayerState } from "entity/player/IPlayer";
 import Player from "entity/player/Player";
+import { EventBus } from "event/EventBuses";
+import { EventHandler } from "event/EventManager";
 import { GameMode } from "game/options/IGameOptions";
 import { Dictionary } from "language/Dictionaries";
 import Translation from "language/Translation";
@@ -182,17 +184,18 @@ export default class ChallengeServer extends Mod {
 		}
 	}
 
-	@Override @HookMethod
-	public onPlayerDeath(player: Player): boolean | undefined {
-		if (game.getGameMode() !== GameMode.Challenge) return;
+	@EventHandler(EventBus.Players, "die")
+	public onPlayerDeath(player: Player) {
+		if (game.getGameMode() !== GameMode.Challenge)
+			return;
 
 		const remainingPlayers = players.filter(p => p !== player && p.state === PlayerState.None);
-		if (remainingPlayers.length > 1) {
+		if (remainingPlayers.length > 1)
 			return;
-		}
 
 		if (remainingPlayers.length === 1) {
-			if (!this.data.lastSurvivingPlayerWinsAutomatically) return;
+			if (!this.data.lastSurvivingPlayerWinsAutomatically)
+				return;
 
 			this.winnerName = remainingPlayers[0].getName().getString();
 			Messages.sendChatMessage(localPlayer, translation(ChallengeServerTranslation.WinByDefault)
@@ -320,7 +323,7 @@ export default class ChallengeServer extends Mod {
 	}
 
 	private async end() {
-		await game.resetGameState(true);
+		await game.resetGameState(false);
 		await sleep(seconds(1));
 		game.restartDedicatedServer();
 	}
