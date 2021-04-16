@@ -1,19 +1,18 @@
-import { PlayerState } from "entity/player/IPlayer";
-import Player from "entity/player/Player";
 import { EventBus } from "event/EventBuses";
 import { EventHandler } from "event/EventManager";
+import { PlayerState } from "game/entity/player/IPlayer";
+import Player from "game/entity/player/Player";
 import { GameMode } from "game/options/IGameOptions";
 import { Dictionary } from "language/Dictionaries";
 import Translation from "language/Translation";
 import { HookMethod } from "mod/IHookHost";
 import Mod from "mod/Mod";
 import Register from "mod/ModRegistry";
-import { CheckButton } from "newui/component/CheckButton";
-import Component from "newui/component/Component";
-import { RangeRow } from "newui/component/RangeRow";
-import newui from "newui/NewUi";
-import Messages from "newui/screen/screens/game/static/Messages";
-import { sleep } from "utilities/Async";
+import { CheckButton } from "ui/component/CheckButton";
+import Component from "ui/component/Component";
+import { RangeRow } from "ui/component/RangeRow";
+import Messages from "ui/screen/screens/game/static/Messages";
+import { sleep } from "utilities/promise/Async";
 
 enum GameState {
 	OutsideGame,
@@ -221,7 +220,7 @@ export default class ChallengeServer extends Mod {
 
 	private setDescription(description: Translation) {
 		multiplayer.updateOptions({ description: description.getString() });
-		newui.refreshTranslations();
+		ui.refreshTranslations();
 	}
 
 	@Bound

@@ -1,7 +1,7 @@
-import Player from "entity/player/Player";
+import Player from "game/entity/player/Player";
 import { Dictionary } from "language/Dictionaries";
 import Mod from "mod/Mod";
-import Component from "newui/component/Component";
+import Component from "ui/component/Component";
 interface IChallengeServerData {
     playersToWaitFor: number;
     countdownTime: number;

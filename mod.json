@@ -1,10 +1,11 @@
 {
 	"name": "Challenge Server",
 	"description": "A script for dedicated servers that waits for players, then waits for the game to end, then restarts.",
-	"author": "Yuudaari",
+	"author": "Chirichirichiri",
+	"github": "https://github.com/WaywardGame/challengeserver",
 	"version": "1.0.0",
 	"unloadable": true,
-	"waywardVersion": "2.9.0-beta",
+	"waywardVersion": "2.10.0-beta",
 	"file": "out/ChallengeServer",
 	"multiplayer": "serverside",
 	"languages": [
