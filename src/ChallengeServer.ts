@@ -2,16 +2,18 @@ import { EventBus } from "event/EventBuses";
 import { EventHandler } from "event/EventManager";
 import { PlayerState } from "game/entity/player/IPlayer";
 import Player from "game/entity/player/Player";
+import PlayerManager from "game/entity/player/PlayerManager";
+import { Game } from "game/Game";
+import DedicatedServerManager from "game/meta/DedicatedServerManager";
 import { GameMode } from "game/options/IGameOptions";
-import { Dictionary } from "language/Dictionaries";
+import Dictionary from "language/Dictionary";
 import Translation from "language/Translation";
-import { HookMethod } from "mod/IHookHost";
 import Mod from "mod/Mod";
 import Register from "mod/ModRegistry";
 import { CheckButton } from "ui/component/CheckButton";
 import Component from "ui/component/Component";
 import { RangeRow } from "ui/component/RangeRow";
-import Messages from "ui/screen/screens/game/static/Messages";
+import { Bound } from "utilities/Decorators";
 import { sleep } from "utilities/promise/Async";
 
 enum GameState {
@@ -40,7 +42,7 @@ enum ChallengeServerTranslation {
 }
 
 function translation(id: ChallengeServerTranslation) {
-	return new Translation(ChallengeServer.INSTANCE.dictionary, id);
+	return Translation.get(ChallengeServer.INSTANCE.dictionary, id);
 }
 
 function translateTime(time: number, type: "default" | "simple" | "analog" = "default") {
@@ -85,7 +87,7 @@ export default class ChallengeServer extends Mod {
 	private winnerName: string | undefined;
 	private elapsed: number;
 
-	@Override public initializeGlobalData(data?: IChallengeServerData) {
+	public override initializeGlobalData(data?: IChallengeServerData) {
 		return data || {
 			playersToWaitFor: 2,
 			countdownTime: 5,
@@ -135,8 +137,8 @@ export default class ChallengeServer extends Mod {
 			.appendTo(section);
 	}
 
-	@Override @HookMethod
-	public onGameStart(isLoadingSave: boolean, playedCount: number) {
+	@EventHandler(EventBus.Game, "play")
+	public onGameStart(game: Game, isLoadingSave: boolean, playedCount: number) {
 		if (game.getGameMode() !== GameMode.Challenge) return;
 
 		game.setPaused(true);
@@ -145,8 +147,8 @@ export default class ChallengeServer extends Mod {
 		sleep(seconds(1)).then(this.waitForPlayers);
 	}
 
-	@Override @HookMethod
-	public onPlayerJoin(player: Player) {
+	@EventHandler(EventBus.PlayerManager, "join")
+	public onPlayerJoin(manager: PlayerManager, player: Player) {
 		if (game.getGameMode() !== GameMode.Challenge) return;
 
 		if (this.gameState === GameState.WaitingForPlayers || this.gameState === GameState.Countdown) {
@@ -162,8 +164,8 @@ export default class ChallengeServer extends Mod {
 		}
 	}
 
-	@Override @HookMethod
-	public onPlayerLeave(player: Player) {
+	@EventHandler(EventBus.PlayerManager, "leave")
+	public onPlayerLeave(manager: PlayerManager, player: Player) {
 		if (game.getGameMode() !== GameMode.Challenge) return;
 
 		if (this.gameState === GameState.WaitingForPlayers) {
@@ -197,7 +199,7 @@ export default class ChallengeServer extends Mod {
 				return;
 
 			this.winnerName = remainingPlayers[0].getName().getString();
-			Messages.sendChatMessage(localPlayer, translation(ChallengeServerTranslation.WinByDefault)
+			multiplayer.sendChatMessage(localPlayer, translation(ChallengeServerTranslation.WinByDefault)
 				.addArgs(this.winnerName)
 				.getString());
 		}
@@ -206,7 +208,7 @@ export default class ChallengeServer extends Mod {
 		return;
 	}
 
-	@Override @HookMethod
+	@EventHandler(EventBus.Players, "sailToCivilization")
 	public onSailToCivilization(player: Player) {
 		if (game.getGameMode() !== GameMode.Challenge) return;
 
@@ -214,7 +216,7 @@ export default class ChallengeServer extends Mod {
 		this.startEndingCountdown();
 	}
 
-	@Override public onUnload() {
+	public override onUnload() {
 		this.gameState = GameState.OutsideGame;
 	}
 
@@ -257,7 +259,7 @@ export default class ChallengeServer extends Mod {
 				if (elapsed % seconds(10)) continue; // only log every 10 seconds
 			}
 
-			Messages.sendChatMessage(localPlayer, translation(ChallengeServerTranslation.Countdown)
+			multiplayer.sendChatMessage(localPlayer, translation(ChallengeServerTranslation.Countdown)
 				.addArgs(translateTime(countdownTime - elapsed))
 				.getString());
 		}
@@ -267,7 +269,7 @@ export default class ChallengeServer extends Mod {
 
 	private startGame() {
 		game.setPaused(false);
-		Messages.sendChatMessage(localPlayer, translation(ChallengeServerTranslation.Start).getString());
+		multiplayer.sendChatMessage(localPlayer, translation(ChallengeServerTranslation.Start).getString());
 		multiplayer.updateOptions({ newPlayerState: PlayerState.Ghost });
 
 		this.elapsed = 0;
@@ -313,7 +315,7 @@ export default class ChallengeServer extends Mod {
 
 			if (elapsed % seconds(10)) continue; // only log every 10 seconds
 
-			Messages.sendChatMessage(localPlayer, translation(ChallengeServerTranslation.EndingCountdown)
+			multiplayer.sendChatMessage(localPlayer, translation(ChallengeServerTranslation.EndingCountdown)
 				.addArgs(translateTime(countdownTime - elapsed))
 				.getString());
 		}
@@ -322,8 +324,8 @@ export default class ChallengeServer extends Mod {
 	}
 
 	private async end() {
-		await game.resetGameState(false);
+		await game.reset(false);
 		await sleep(seconds(1));
-		game.restartDedicatedServer();
+		DedicatedServerManager.restart();
 	}
 }
