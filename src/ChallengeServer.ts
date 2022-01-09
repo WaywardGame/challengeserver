@@ -4,6 +4,7 @@ import { PlayerState } from "game/entity/player/IPlayer";
 import Player from "game/entity/player/Player";
 import PlayerManager from "game/entity/player/PlayerManager";
 import { Game } from "game/Game";
+import { PauseSource } from "game/IGame";
 import DedicatedServerManager from "game/meta/DedicatedServerManager";
 import { GameMode } from "game/options/IGameOptions";
 import Dictionary from "language/Dictionary";
@@ -141,7 +142,7 @@ export default class ChallengeServer extends Mod {
 	public onGameStart(game: Game, isLoadingSave: boolean, playedCount: number) {
 		if (game.getGameMode() !== GameMode.Challenge) return;
 
-		game.setPaused(true);
+		game.setPaused(true, PauseSource.Generic);
 		this.contenders = new Set();
 		this.winnerName = undefined;
 		sleep(seconds(1)).then(this.waitForPlayers);
@@ -242,7 +243,7 @@ export default class ChallengeServer extends Mod {
 
 			if (this.gameState !== GameState.Countdown) return;
 			// tslint:disable-next-line no-boolean-literal-compare i think this can be undefined
-			if (game.paused === false) {
+			if (!game.isPaused) {
 				this.startGame();
 				return;
 			}
@@ -268,7 +269,7 @@ export default class ChallengeServer extends Mod {
 	}
 
 	private startGame() {
-		game.setPaused(false);
+		game.setPaused(false, PauseSource.Generic);
 		multiplayer.sendChatMessage(localPlayer, translation(ChallengeServerTranslation.Start).getString());
 		multiplayer.updateOptions({ newPlayerState: PlayerState.Ghost });
 
