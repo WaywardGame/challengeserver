@@ -174,12 +174,13 @@ export default class ChallengeServer extends Mod {
 		}
 
 		// the players.length calculations in here are 1 off because the player hasn't actually left yet
-		if (players.length - 2 < this.data.playersToWaitFor) {
+		const allPlayers = playerManager.getAll(true, true);
+		if (allPlayers.length - 2 < this.data.playersToWaitFor) {
 			if (this.gameState === GameState.Countdown) {
 				this.waitForPlayers();
 			}
 
-			if (!players.some(p => p !== player && p.state === PlayerState.None)) {
+			if (!allPlayers.some(p => p !== player && p.state === PlayerState.None)) {
 				// this was the last living player
 				this.startEndingCountdown();
 			}
@@ -191,7 +192,7 @@ export default class ChallengeServer extends Mod {
 		if (game.getGameMode() !== GameMode.Challenge)
 			return;
 
-		const remainingPlayers = players.filter(p => p !== player && p.state === PlayerState.None);
+		const remainingPlayers = playerManager.getAll(true, true).filter(p => p !== player && p.state === PlayerState.None);
 		if (remainingPlayers.length > 1)
 			return;
 
