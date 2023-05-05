@@ -154,7 +154,7 @@ export default class ChallengeServer extends Mod {
 
 		if (this.gameState === GameState.WaitingForPlayers || this.gameState === GameState.Countdown) {
 			this.contenders.add(player.identifier);
-			if (this.gameState === GameState.WaitingForPlayers && players.length - 1 >= this.data.playersToWaitFor) {
+			if (this.gameState === GameState.WaitingForPlayers && game.playerManager.getAll(true, true).length >= this.data.playersToWaitFor) {
 				this.startCountdown();
 			}
 		}
@@ -174,7 +174,7 @@ export default class ChallengeServer extends Mod {
 		}
 
 		// the players.length calculations in here are 1 off because the player hasn't actually left yet
-		const allPlayers = playerManager.getAll(true, true);
+		const allPlayers = game.playerManager.getAll(true, true);
 		if (allPlayers.length - 2 < this.data.playersToWaitFor) {
 			if (this.gameState === GameState.Countdown) {
 				this.waitForPlayers();
@@ -192,7 +192,7 @@ export default class ChallengeServer extends Mod {
 		if (game.getGameMode() !== GameMode.Challenge)
 			return;
 
-		const remainingPlayers = playerManager.getAll(true, true).filter(p => p !== player && p.state === PlayerState.None);
+		const remainingPlayers = game.playerManager.getAll(true, true).filter(p => p !== player && p.state === PlayerState.None);
 		if (remainingPlayers.length > 1)
 			return;
 
