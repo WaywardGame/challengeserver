@@ -9,24 +9,25 @@
  * https://github.com/WaywardGame/types/wiki
  */
 
-import { EventBus } from "event/EventBuses";
-import { EventHandler } from "event/EventManager";
-import { PlayerState } from "game/entity/player/IPlayer";
-import Player from "game/entity/player/Player";
-import PlayerManager from "game/entity/player/PlayerManager";
-import { Game } from "game/Game";
-import { PauseSource } from "game/IGame";
-import DedicatedServerManager from "game/meta/DedicatedServerManager";
-import { GameMode } from "game/options/IGameOptions";
-import Dictionary from "language/Dictionary";
-import Translation from "language/Translation";
-import Mod from "mod/Mod";
-import Register from "mod/ModRegistry";
-import { CheckButton } from "ui/component/CheckButton";
-import Component from "ui/component/Component";
-import { RangeRow } from "ui/component/RangeRow";
-import { Bound } from "utilities/Decorators";
-import { sleep } from "utilities/promise/Async";
+import { EventBus } from "@wayward/game/event/EventBuses";
+import { EventHandler } from "@wayward/game/event/EventManager";
+import { PlayerState } from "@wayward/game/game/entity/player/IPlayer";
+import Player from "@wayward/game/game/entity/player/Player";
+import PlayerManager from "@wayward/game/game/entity/player/PlayerManager";
+import { Game } from "@wayward/game/game/Game";
+import { PauseSource } from "@wayward/game/game/IGame";
+import DedicatedServerManager from "@wayward/game/game/meta/DedicatedServerManager";
+import { GameMode } from "@wayward/game/game/options/IGameOptions";
+import Dictionary from "@wayward/game/language/Dictionary";
+import TranslationImpl from "@wayward/game/language/impl/TranslationImpl";
+import Translation from "@wayward/game/language/Translation";
+import Mod from "@wayward/game/mod/Mod";
+import Register from "@wayward/game/mod/ModRegistry";
+import { CheckButton } from "@wayward/game/ui/component/CheckButton";
+import Component from "@wayward/game/ui/component/Component";
+import { RangeRow } from "@wayward/game/ui/component/RangeRow";
+import { Bound } from "@wayward/utilities/Decorators";
+import { sleep } from "@wayward/utilities/promise/Async";
 
 enum GameState {
 	OutsideGame,
@@ -53,11 +54,11 @@ enum ChallengeServerTranslation {
 	OptionLastSurvivingPlayerWins,
 }
 
-function translation(id: ChallengeServerTranslation) {
+function translation(id: ChallengeServerTranslation): TranslationImpl {
 	return Translation.get(ChallengeServer.INSTANCE.dictionary, id);
 }
 
-function translateTime(time: number, type: "default" | "simple" | "analog" = "default") {
+function translateTime(time: number, type: "default" | "simple" | "analog" = "default"): TranslationImpl {
 	time = Math.floor(time / 1000);
 	if (type === "analog") {
 		const secondsString = `${time % 60}`;
@@ -67,11 +68,11 @@ function translateTime(time: number, type: "default" | "simple" | "analog" = "de
 	return translation(ChallengeServerTranslation.Time).addArgs(Math.floor(time / 60), time % 60, type === "simple");
 }
 
-function minutes(amt: number) {
+function minutes(amt: number): number {
 	return amt * 60 * 1000;
 }
 
-function seconds(amt: number) {
+function seconds(amt: number): number {
 	return amt * 1000;
 }
 
@@ -99,7 +100,7 @@ export default class ChallengeServer extends Mod {
 	private winnerName: string | undefined;
 	private elapsed: number;
 
-	public override initializeGlobalData(data?: IChallengeServerData) {
+	public override initializeGlobalData(data?: IChallengeServerData): IChallengeServerData {
 		return data || {
 			playersToWaitFor: 2,
 			countdownTime: 5,
@@ -109,7 +110,7 @@ export default class ChallengeServer extends Mod {
 	}
 
 	@Register.optionsSection
-	public initializeOptionsSection(section: Component) {
+	public initializeOptionsSection(section: Component): void {
 		new RangeRow()
 			.setLabel(label => label.setText(translation(ChallengeServerTranslation.OptionCountdownTime)))
 			.editRange(range => range
@@ -150,7 +151,7 @@ export default class ChallengeServer extends Mod {
 	}
 
 	@EventHandler(EventBus.Game, "play")
-	public onGameStart(game: Game, isLoadingSave: boolean, playedCount: number) {
+	public onGameStart(game: Game, isLoadingSave: boolean, playedCount: number): void {
 		if (game.getGameMode() !== GameMode.Challenge) return;
 
 		game.setPaused(true, PauseSource.Generic);
@@ -160,7 +161,7 @@ export default class ChallengeServer extends Mod {
 	}
 
 	@EventHandler(EventBus.PlayerManager, "join")
-	public onPlayerJoin(manager: PlayerManager, player: Player) {
+	public onPlayerJoin(manager: PlayerManager, player: Player): void {
 		if (game.getGameMode() !== GameMode.Challenge) return;
 
 		if (this.gameState === GameState.WaitingForPlayers || this.gameState === GameState.Countdown) {
@@ -177,7 +178,7 @@ export default class ChallengeServer extends Mod {
 	}
 
 	@EventHandler(EventBus.PlayerManager, "leave")
-	public onPlayerLeave(manager: PlayerManager, player: Player) {
+	public onPlayerLeave(manager: PlayerManager, player: Player): void {
 		if (game.getGameMode() !== GameMode.Challenge) return;
 
 		if (this.gameState === GameState.WaitingForPlayers) {
@@ -199,7 +200,7 @@ export default class ChallengeServer extends Mod {
 	}
 
 	@EventHandler(EventBus.Players, "die")
-	public onPlayerDeath(player: Player) {
+	public onPlayerDeath(player: Player): void {
 		if (game.getGameMode() !== GameMode.Challenge)
 			return;
 
@@ -222,29 +223,29 @@ export default class ChallengeServer extends Mod {
 	}
 
 	@EventHandler(EventBus.Players, "sailToCivilization")
-	public onSailToCivilization(player: Player) {
+	public onSailToCivilization(player: Player): void {
 		if (game.getGameMode() !== GameMode.Challenge) return;
 
 		this.winnerName = player.getName().getString();
 		this.startEndingCountdown();
 	}
 
-	public override onUnload() {
+	public override onUnload(): void {
 		this.gameState = GameState.OutsideGame;
 	}
 
-	private setDescription(description: Translation) {
+	private setDescription(description: Translation): void {
 		multiplayer.updateOptions({ description: description.getString() });
 		ui.refreshTranslations();
 	}
 
 	@Bound
-	private waitForPlayers() {
+	private waitForPlayers(): void {
 		this.gameState = GameState.WaitingForPlayers;
 		this.setDescription(translation(ChallengeServerTranslation.DescriptionWaiting));
 	}
 
-	private async startCountdown() {
+	private async startCountdown(): Promise<void> {
 		this.gameState = GameState.Countdown;
 
 		// const countdownTime = seconds(30);
@@ -280,7 +281,7 @@ export default class ChallengeServer extends Mod {
 		this.startGame();
 	}
 
-	private startGame() {
+	private startGame(): void {
 		game.setPaused(false, PauseSource.Generic);
 		multiplayer.sendChatMessage(localPlayer, translation(ChallengeServerTranslation.Start).getString());
 		multiplayer.updateOptions({ newPlayerState: PlayerState.Ghost });
@@ -289,7 +290,7 @@ export default class ChallengeServer extends Mod {
 		this.continueGame();
 	}
 
-	private async continueGame() {
+	private async continueGame(): Promise<void> {
 		this.gameState = GameState.Playing;
 
 		while (this.gameState === GameState.Playing) {
@@ -304,7 +305,7 @@ export default class ChallengeServer extends Mod {
 		}
 	}
 
-	private async startEndingCountdown() {
+	private async startEndingCountdown(): Promise<void> {
 		if (this.gameState !== GameState.Playing) return;
 
 		this.gameState = GameState.Ending;
@@ -336,7 +337,7 @@ export default class ChallengeServer extends Mod {
 		this.end();
 	}
 
-	private async end() {
+	private async end(): Promise<void> {
 		await game.reset(false);
 		await sleep(seconds(1));
 		DedicatedServerManager.restart();
