@@ -255,7 +255,6 @@ export default class ChallengeServer extends Mod {
 			await sleep(seconds(1));
 
 			if (this.gameState !== GameState.Countdown) return;
-			// tslint:disable-next-line no-boolean-literal-compare i think this can be undefined
 			if (!game.isPaused) {
 				this.startGame();
 				return;
