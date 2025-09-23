@@ -5,7 +5,7 @@
 	"github": "https://github.com/WaywardGame/challengeserver",
 	"version": "1.0.0",
 	"unloadable": true,
-	"waywardVersion": "2.14.0-beta",
+	"waywardVersion": "2.15.0-beta",
 	"file": "out/ChallengeServer",
 	"multiplayer": "serverside",
 	"languages": [
